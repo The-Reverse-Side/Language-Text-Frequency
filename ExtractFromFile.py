@@ -18,19 +18,17 @@ import unicodedata
     # SpaCy can check for verbs, so I can go through the verb list and add el to all of them as well
     # at some point I actually need to go through those words too.. maybe make that rapid review script
 
-INPUT_FILE = "source.txt" # provide a .pdf or .txt file
+INPUT_FILE = "./Source/source.txt" # provide either a .pdf or .txt file
 filter_words_path = "./KnownWords/filter_words.csv"
 # prompt = "What language is this text? (Italian, Spanish, or Swedish)\n"
 # language = pyip.inputMenu(["Italian", "Spanish", "Swedish"], prompt)
-
-#! hardcoding for now
-language = 'Spanish'
+language = 'Spanish' #! hardcoding for now
 
 known_words_path = "./KnownWords/known_words"
 match language:
         case "Spanish":
             known_words_path = known_words_path + "_es.csv"
-            SPACY_MODEL = "es_core_news_lg" # A 'trained language pipeline'
+            SPACY_MODEL = "es_dep_news_trf" # A 'trained language pipeline'
         case "Swedish":
             known_words_path = known_words_path + "_sv.csv"
             SPACY_MODEL = "sv_core_news_lg"
@@ -85,7 +83,7 @@ def main():
     print(f"Got it, loading {language} spacy model...")
 
     nlp_model = spacy.load(SPACY_MODEL) # Returns a Language object convention is to call it nlp
-    nlp_model.max_length = 2000000
+    nlp_model.max_length = 2000000 # Explicitly increasing max length to handle large books
     print("Model loaded, starting processing...")
 
     # Checking the file type and calling the appropriate method
@@ -93,21 +91,20 @@ def main():
         source_text = extract_text_from_pdf(INPUT_FILE)
     elif INPUT_FILE[-3:] == "txt":
         source_text = extract_text_from_txt(INPUT_FILE)
-    else:
-        print("You are giving me the wrong file type!")
+    else: # Wrong file type!
+        raise Exception("Wrong file type!")
 
     # Process text, get word content
     # try:
     processed_text = nlp_model(source_text) # Processed text (tokenized), but still contains white spaces for example
+    # Tokenization is when text is split into words, punctuation marks, etc
     words = [token.text for token in processed_text if token.is_alpha] # Getting content for each token if alphabetic char
-    #n Tokenization is when text is split into words, punctuation marks, etc
     # except ValueError:
     #     print("The file is too big!") #maybe it makes sense to check the file size first instead??
 
 
     # Get word lemmas and their frequency
-    word_lemmas = [token.lemma_ for token in processed_text if token.is_alpha] # Getting lemma for each token if alphabetic char
-    word_lemmas = [lemma.lower().strip() for lemma in word_lemmas]
+    word_lemmas = [token.lemma_.lower().strip() for token in processed_text if token.is_alpha] # Getting lemma for each token if alphabetic char
     lemma_frequencies = collections.Counter(word_lemmas) # Returns a dict sorted with frequency of word occurrences
     unique_lemmas = list(lemma_frequencies.keys()) # The keys of course are the words
 
@@ -123,9 +120,9 @@ def main():
     filter_words = [word.lower().strip() for word in read_csv_list(filter_words_path)]
 
     wanted_words = list(
-        set(unique_lemmas) - set(known_word_lemmas) - set(filter_words))
+        set(unique_lemmas) - set(known_word_lemmas) - set(filter_words)) #* These are my unknown words
 
-    unwanted_word_count = len(set(unique_lemmas)) - len(set(wanted_words))
+    unwanted_word_count = len(set(unique_lemmas)) - len(set(wanted_words)) #* Known words
 
     total_word_count = len(unique_lemmas)
     new_word_percentage = int((total_word_count - unwanted_word_count) / total_word_count * 100) # unique lemmas / unwanted words
@@ -140,7 +137,7 @@ def main():
         conjugated_word = words[index] # Then uses that to find the conjugated version of the word
         for sentence in sentences: # There should be a more efficient way of doing this..?
             if conjugated_word in sentence:
-                sentence = sentence[:100] # Trying to stop these overly long example sentences (normally bugs)
+                sentence = sentence[:250] # Trying to stop these overly long example sentences (normally bugs)
                 clean_sentence = sentence.replace('\n', ' ')  # Replace new lines with a space
                 data.append([lemma_frequencies[word], word, clean_sentence])
                 break

@@ -1,9 +1,11 @@
 .venv/
+/venv
+
 .vscode
 __pycache__
 .DS_Store
 output.csv
-/venv
+
 .idea/inspectionProfiles/profiles_settings.xml
 .idea/encodings.xml
 /.idea
