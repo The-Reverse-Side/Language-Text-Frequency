@@ -5,10 +5,10 @@
 __pycache__
 .DS_Store
 
-
-./Source
-./Output
-
 .idea/inspectionProfiles/profiles_settings.xml
 .idea/encodings.xml
 /.idea
+
+/Output
+/Source
+/Misc
