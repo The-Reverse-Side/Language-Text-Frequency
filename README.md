@@ -29,12 +29,14 @@ To install libraries run command: `python -m pip install -r requirements.txt`
 Install Spanish language model: `python -m spacy download es_dep_news_trf`
 Italian language model: `python -m spacy download it_core_news_lg`
 Swedish language model: `python -m spacy download sv_core_news_lg`
+German language model: `python -m spacy download de_dep_news_trf`
 
 
 **Known_Words:**
 Note: Analyze.py lemmitizes known_words before filtering out.. so known_words.csv can be very ugly
 - filter_words.csv - is a general list of words with countries and characters in my series that I dont need to learn
 - filter_words_{langauge}.csv - is a language-specific list of words I know, populated from Anki
+- Note to self: My known words are stored in Google sheets - Vocab Lexicon pages
 
 
 

@@ -20,9 +20,10 @@ import unicodedata
 
 INPUT_FILE = "./Source/source.txt" # provide either a .pdf or .txt file
 filter_words_path = "./KnownWords/filter_words.csv"
-# prompt = "What language is this text? (Italian, Spanish, or Swedish)\n"
-# language = pyip.inputMenu(["Italian", "Spanish", "Swedish"], prompt)
-language = 'Spanish' #! hardcoding for now
+# prompt = "What language is this text? (Italian, Spanish, German, or Swedish)\n"
+# language = pyip.inputMenu(["Italian", "Spanish", "Swedish", "German"], prompt)
+
+language = 'German' #! hardcoding for now
 
 known_words_path = "./KnownWords/known_words"
 match language:
@@ -35,6 +36,9 @@ match language:
         case "Italian":
             known_words_path = known_words_path + "_it.csv"
             SPACY_MODEL = "it_core_news_lg"
+        case "German":
+            known_words_path = known_words_path + "_de.csv"
+            SPACY_MODEL = "de_dep_news_trf"
 
 
 def extract_text_from_pdf(pdf_path: str) -> str:
