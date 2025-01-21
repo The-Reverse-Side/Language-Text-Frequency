@@ -2,3 +2,8 @@ pdfplumber
 spacy
 pyinputplus
 unicodedata
+spacy
+keyboard
+unicodedata
+glob
+csv
