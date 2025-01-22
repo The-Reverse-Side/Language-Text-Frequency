@@ -5,8 +5,9 @@ import spacy
 
 
 # Load spaCy's model
-GERMAN_MODEL = "de_dep_news_trf" #! currently hardcoded German
-nlp = spacy.load(GERMAN_MODEL)
+LANGUAGE_MODEL = "en_core_web_trf" #! currently hardcoded German de_dep_news_trf
+# English: en_core_web_trf
+nlp = spacy.load(LANGUAGE_MODEL)
 
 
 def extract_words(file_path):
@@ -25,12 +26,12 @@ def extract_words(file_path):
     return words
 
 
-INPUT_FILE = "./input/input.txt"
+INPUT_FILE = "./input/jim.txt"
 OUTPUT_FILE = "processed/cleaned_word_set.csv"
 
 word_set = extract_words(INPUT_FILE)
 
-print(f"Extracted words: {word_set}")
+print(f"A total of {len(word_set)} have been extracted")
 
 with open(OUTPUT_FILE, 'w', newline='', encoding='utf-8') as known_file:
 		writer = csv.writer(known_file)
