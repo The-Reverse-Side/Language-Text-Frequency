@@ -1,13 +1,12 @@
 '''
-    A collection of useful functions for cleaning/adjusting known_words files
+    A collection of useful functions for cleaning/adjusting/sorting known_words.csv
     This should theoretically make it easier to keep things clean and formatted
 '''
 
 import csv
-import glob
 
 def clean_csv_inplace(file_path):
-    '''Removes duplicates, whitespace, and lower()s all words'''
+    '''Removes duplicates, whitespace, and lowers all words for consistency'''
     cleaned_words = set()
 
     # Step 1: Read and clean the words
@@ -29,10 +28,6 @@ def clean_csv_inplace(file_path):
     print(f"Cleaned words saved back to '{file_path}'. Total unique words: {len(cleaned_words)}")
 
 
-# Go through and clean all known_words files, despite language
-# INPUT_FILE_PATH = "./known_words/known_words_de.csv"  # Replace with your input CSV file path
-directory_path = "./known_words"
-
-for csv_file in glob.glob(os.path.join(directory_path, "*.csv")):
-    print(f"Processing file: {csv_file}")
-    clean_csv_inplace(csv_file)
+# Go through and clean all known_words files
+INPUT_FILE_PATH = "./known_words/known_words.csv"
+clean_csv_inplace(INPUT_FILE_PATH)

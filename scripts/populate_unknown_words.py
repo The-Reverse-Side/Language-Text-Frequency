@@ -41,7 +41,7 @@ def process_words(INPUT_FILE, SPACY_MODEL):
 	new_known_words = []
 	words = []
 	CLEANED_INPUT = "./processed/spacy_friendly_words.txt"
-	KNOWN_WORDS_PATH = f'./known_words/known_words_de.csv' # hardcoded german for now
+	KNOWN_WORDS_PATH = f'./known_words/known_words.csv'
 	
     # First I need to convert the csv into a Spacy-friendly format
 	clean_up_input(CLEANED_INPUT, INPUT_FILE)
@@ -67,7 +67,7 @@ def process_words(INPUT_FILE, SPACY_MODEL):
 	# Lemmatize words using spaCy
 	lemmatized_words = []
 	print("'Unknown (skip) Words' <--   --> 'Known Words'")
-	for word in filtered_list:
+	for word in filtered_list[:20]:
 		processed_word = nlp_model(word)
 		lemmatized_phrase = " ".join([token.lemma_ for token in processed_word])
 
@@ -97,13 +97,13 @@ def process_words(INPUT_FILE, SPACY_MODEL):
 		writer.writerows([[word] for word in new_known_words])
 
 
-	print("Processing complete. known_words updated.")
+	print("Processing complete. 'known_words.csv' updated.")
 
 
 def main():
 	# todo-eventually.. select language here later on
 	SPACY_MODEL = "de_dep_news_trf"	
-	INPUT_FILE = './processed/generated_words.csv'
+	INPUT_FILE = './processed/cleaned_word_set.csv'
 
 	process_words(INPUT_FILE, SPACY_MODEL)
 

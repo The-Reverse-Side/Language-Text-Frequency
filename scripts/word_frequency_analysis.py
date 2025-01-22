@@ -2,11 +2,16 @@ import collections
 import csv
 import re
 import time
+import unicodedata
 
+import matplotlib.pyplot as plt
+import pandas as pd
 import pdfplumber
 import pyinputplus as pyip
 import spacy
-import unicodedata
+from matplotlib.patches import Patch
+from pywaffle import Waffle
+import plotly.graph_objects as go
 
 #n El pasaje: The text is composed of 84% new words: 12725 total words: 2032 known words, 10693 new words.
 #n Percy Jackson 2: The text is composed of 75% new words: 6460 total words: 1590 known words, 4870 new words.
@@ -18,26 +23,21 @@ import unicodedata
     # SpaCy can check for verbs, so I can go through the verb list and add el to all of them as well
     # at some point I actually need to go through those words too.. maybe make that rapid review script
 
-INPUT_FILE = "./Source/source.txt" # provide either a .pdf or .txt file
-filter_words_path = "./KnownWords/filter_words.csv"
+INPUT_FILE = "./input/input.txt" # provide either a .pdf or .txt file
 # prompt = "What language is this text? (Italian, Spanish, German, or Swedish)\n"
 # language = pyip.inputMenu(["Italian", "Spanish", "Swedish", "German"], prompt)
 
 language = 'German' #! hardcoding for now
 
-known_words_path = "./KnownWords/known_words"
+known_words_path = "./known_words/known_words.csv"
 match language:
         case "Spanish":
-            known_words_path = known_words_path + "_es.csv"
             SPACY_MODEL = "es_dep_news_trf" # A 'trained language pipeline'
         case "Swedish":
-            known_words_path = known_words_path + "_sv.csv"
             SPACY_MODEL = "sv_core_news_lg"
         case "Italian":
-            known_words_path = known_words_path + "_it.csv"
             SPACY_MODEL = "it_core_news_lg"
         case "German":
-            known_words_path = known_words_path + "_de.csv"
             SPACY_MODEL = "de_dep_news_trf"
 
 
@@ -81,7 +81,7 @@ def normalize_text(text: str) -> str:
     return unicodedata.normalize('NFC', text)
 
 
-def main():
+def analyze_text_frequency():
     start_time = time.time()
 
     print(f"Got it, loading {language} spacy model...")
@@ -121,10 +121,9 @@ def main():
     known_words = read_csv_text(known_words_path)
     processed_known_words = nlp_model(known_words)
     known_word_lemmas = [token.lemma_.lower().strip() for token in processed_known_words if token.is_alpha]
-    filter_words = [word.lower().strip() for word in read_csv_list(filter_words_path)]
 
     wanted_words = list(
-        set(unique_lemmas) - set(known_word_lemmas) - set(filter_words)) #* These are my unknown words
+        set(unique_lemmas) - set(known_word_lemmas)) #* These are my unknown words
 
     unwanted_word_count = len(set(unique_lemmas)) - len(set(wanted_words)) #* Known words
 
@@ -143,13 +142,153 @@ def main():
             if conjugated_word in sentence:
                 sentence = sentence[:250] # Trying to stop these overly long example sentences (normally bugs)
                 clean_sentence = sentence.replace('\n', ' ')  # Replace new lines with a space
-                data.append([lemma_frequencies[word], word, clean_sentence])
+                data.append([lemma_frequencies[word], word, "", clean_sentence]) # includes empty column for definitions
                 break
+
+    # header = ["Frequency", "Word", "Definition", "Example Sentence"]
+
     sorted_data = sorted(data, key=lambda x : x[0], reverse=True) # I guess 'x' iterates over every item?
-    save_csv(sorted_data, "Output/OUTPUT_"+language+".csv")
+    save_csv(sorted_data, "output/word_frequency_"+language+".csv")
         #INPUT_FILE.split(".")[0] just removes the file type text
 
     print(f"\nDone! Total execution time {time.time()-start_time:.0f} seconds ({(time.time()-start_time)/60:.0f} min)")
+
+
+
+
+def word_freq_square_plot():
+    '''Creates a square plot that compares new/known word ratio for (manually inserted) book data'''
+    pasaje_data = {'New Words': 10693, 'Known Words': 2032}
+    percy_jackon_data = {'New Words': 4870, 'Known Words': 1590}
+    harry_potter_data = {'New Words': 3443, 'Known Words': 1712}
+    colors=['#217A79',  '#97E196',]
+
+    # Calculate percentage of new words
+    # pasaje_new_words_pct = pasaje_data['New Words'] / sum(pasaje_data.values()) * 100
+    # percy_new_words_pct = percy_jackon_data['New Words'] / sum(percy_jackon_data.values()) * 100
+    # harry_new_words_pct = harry_potter_data['New Words'] / sum(harry_potter_data.values()) * 100
+
+
+    plot1 = {'values': [count/100 for count in pasaje_data.values()], # [expression for item in iterable]
+             'title': {'label': f'El Pasaje: Probably CEFR C1+ level', 'loc': 'left', 'fontsize': 12}
+            }
+    plot2 = {'values': [count/100 for count in percy_jackon_data.values()],
+            'title': {'label': f'Percy Jackson 2: 9-12 year olds', 'loc': 'left', 'fontsize': 12}
+    }
+    plot3 = {'values': [count/100 for count in harry_potter_data.values()],
+            'title': {'label': f'Harry Potter 1: 9-12 year olds', 'loc': 'left', 'fontsize': 12}
+    }
+
+
+    fig = plt.figure(
+        1,
+        FigureClass=Waffle,
+        plots={
+            311: plot1,
+            312: plot2,
+            313: plot3,
+        },
+        rows=5,
+        colors=colors, # Our focus is on New Words, so we make that the bolder color
+        rounding_rule='ceil',  # Change rounding rule, so value less than 1000 will still have at least 1 block
+        figsize=(8, 6)
+    )
+
+    # fig.text(0.85, 0.75, f'{pasaje_new_words_pct:.1f}% new words', fontsize=16, color=colors[0], fontweight='bold')  # For El Pasaje
+    # fig.text(0.85, 0.45, f'{percy_new_words_pct:.1f}% new words', fontsize=16, color=colors[0], fontweight='bold')   # For Percy Jackson
+    # fig.text(0.85, 0.15, f'{harry_new_words_pct:.1f}% new words', fontsize=16, color=colors[0], fontweight='bold')   # For Harry Potter
+
+
+    legend_elements = [Patch(facecolor=colors[0], label='New Words'),
+                       Patch(facecolor=colors[1], label='Known Words')]
+
+    fig.legend(
+        handles=legend_elements,
+        labels=['New Words', 'Known Words'],
+        loc='lower right',
+        fontsize=10,
+        # frameon=False,
+        bbox_to_anchor=(0.95, 0.05),
+        title="Legend"
+    )
+
+    # Add a title and a small detail at the bottom
+    fig.suptitle('Word Analysis of several Spanish language books', fontsize=14, fontweight='bold')
+    fig.supxlabel(f"Each block represents 100 unqiue words",
+                  fontsize=8,
+                  x=0.5, # position at the 14% axis
+                 )
+    fig.set_facecolor('#F1F1F1') # This is the background
+
+    plt.show()
+
+    # So here we can tell The Passage (El Pasaje) has much more of an advanced vocabulary,
+    # and generally a much more diverse vocabulary
+    # With this, I can select a book based on the challenge I want,
+    # then go to the vocab frequency to see what kind of words I can expect to learn
+
+
+
+def word_frequency_chart(min_word_freq):
+    '''Frequency chart. max_word_freq determines the lowest word freq to include in chart'''
+    #! hardcoded German for now
+    df = pd.read_csv('./output/word_frequency_German.csv', header=None, names=['Frequency', 'Word', 'Definition', 'Example']) 
+
+    # Filter words with frequency >= min_word_freq
+    df = df[df['Frequency'] >= min_word_freq]
+
+    # Sort the dataframe by frequency in descending order
+    df = df.sort_values('Frequency', ascending=False)
+
+    # Create a color scale based on the frequency
+    color_palette = ['#D3F2A3', '#97E196', '#6CC08B', '#5BAE94', '#217A79', '#105965', '#074050']
+
+    min_freq = df['Frequency'].min()
+    max_freq = df['Frequency'].max()
+    norm = (df['Frequency'] - min_freq) / (max_freq - min_freq)
+    colors = [color_palette[int(n * (len(color_palette) - 1))] for n in norm]
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Bar(
+            x=df['Word'],
+            y=df['Frequency'],
+            hovertext = df['Word'] + " : " + df['Frequency'].astype(str) + "<br><br>" + df['Example'],
+            hoverinfo='text',
+            marker_color=colors,
+            marker_line=dict(width=1, color=colors),
+            opacity=1,
+            name='Word Frequency'
+        )
+    )
+
+    fig.update_layout(
+        plot_bgcolor='#F5F5F5'
+    )
+
+    fig.update_xaxes(
+        title_text='Word',
+        title_font={"weight": "bold"}, #"size": 18, "family": "Arial, sans-serif", "color": "black",
+        tickfont={"weight": "bold"},
+        tickangle=45,
+    )
+
+    fig.update_yaxes(
+        title_text='Frequency',
+        title_font={"weight": "bold"},
+        tickfont={"weight": "bold"},
+    )
+
+    fig.show()
+
+
+
+def main():
+    analyze_text_frequency() # Needed for plotting
+
+    # word_freq_square_plot() # Displays a square plot of various (manually inserted) book's new/known word ratios
+    word_frequency_chart(5) # Creates a chart with desc word frequency
 
 
 if __name__ == "__main__":

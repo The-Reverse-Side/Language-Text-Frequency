@@ -1,9 +1,10 @@
 pdfplumber
 spacy
 pyinputplus
-unicodedata
-spacy
 keyboard
-unicodedata
-glob
-csv
+pywaffle
+plotly
+pandas
+matplotlib
+seaborn
+pypalettes

@@ -1,4 +1,4 @@
-'''Takes input.txt and converts it into a clean set of words to be passed to PopulateVocab'''
+'''Takes input.txt and converts it into a cleaned, single column of words'''
 
 import csv
 import spacy
@@ -10,7 +10,7 @@ nlp = spacy.load(GERMAN_MODEL)
 
 
 def extract_words(file_path):
-    """Reads a .txt file, extracts words, and puts them in a pretty format"""
+    """Reads a .txt file, extracts words, and puts them in a single column csv"""
     words = set()
 
     with open(file_path, "r", encoding="utf-8") as file:
@@ -26,7 +26,7 @@ def extract_words(file_path):
 
 
 INPUT_FILE = "./input/input.txt"
-OUTPUT_FILE = "processed/generated_words.csv"
+OUTPUT_FILE = "processed/cleaned_word_set.csv"
 
 word_set = extract_words(INPUT_FILE)
 

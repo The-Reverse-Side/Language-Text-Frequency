@@ -9,8 +9,7 @@ __pycache__
 .idea/encodings.xml
 /.idea
 
-/Output
-/Source
-/Misc
 /input
 /processed
+/known_words
+/output
